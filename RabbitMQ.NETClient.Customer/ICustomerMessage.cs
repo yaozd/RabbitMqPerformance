@@ -4,7 +4,7 @@ namespace RabbitMQ.NETClient.Customer
 {
     public interface ICustomerMessage
     {
-        Func<string, bool> ReceiveMessageCallback { get; set; }
+        Action<String> ReceiveMessageCallback { get; set; }
         uint MessageCount { get; }
         void StartListening();
     }

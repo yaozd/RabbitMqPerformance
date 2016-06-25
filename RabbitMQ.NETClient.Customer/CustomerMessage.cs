@@ -21,7 +21,7 @@ namespace RabbitMQ.NETClient.Customer
         {
             return Singleton.Instance.MqCustomer().ListenChannel(_listentChannelGuid);
         }
-        public Func<string, bool> ReceiveMessageCallback { get; set; }
+        public Action<String> ReceiveMessageCallback { get; set; }
         public uint MessageCount { get; }
         #region  开始监听消息
         /// <summary>
@@ -65,13 +65,13 @@ namespace RabbitMQ.NETClient.Customer
                 var body = args.Body;
                 var message = Encoding.UTF8.GetString(body);
                 //将消息业务处理交给外部业务
-                bool result = Execute(() => ReceiveMessageCallback(message));
+                bool result = ExecuteReciveFun(() => ReceiveMessageCallback(message));
                 //bool result = ReceiveMessageCallback(message);
                 if (result)
                 {
                     if (listenChannel != null && !listenChannel.IsClosed)
                     {
-                        //确认机制--ACK机制
+                        //确认消息已经成做了处理机制--ACK机制
                         listenChannel.BasicAck(deliveryTag: args.DeliveryTag, multiple:false);
                     }
                 }
@@ -87,41 +87,20 @@ namespace RabbitMQ.NETClient.Customer
             }
         }
         #endregion
-        #region Execute
 
+        #region 
         /// <summary>
-        /// Executes the specified expression. 
+        /// 所有的业务逻辑处理都返回结果为true
+        /// 这样就不会造成消息处理的阻塞
+        /// 参考：
+        /// .Net下RabbitMQ的使用(3) -- 竞争的消费者
+        /// http://www.cnblogs.com/haoxinyue/archive/2012/09/26/2703964.html
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="action">The action.</param>
+        /// <param name="action"></param>
         /// <returns></returns>
-        private T Execute<T>(Func<T> action)
+        private bool ExecuteReciveFun(Action action)
         {
 
-            DateTime before = DateTime.Now;
-            //Log.DebugFormat("Executing action '{0}'", action.Method.Name);
-
-            try
-            {
-                T result = action();
-                TimeSpan timeTaken = DateTime.Now - before;
-                //if (Log.IsDebugEnabled)
-                //    Log.DebugFormat("Action '{0}' executed. Took {1} ms.", action.Method.Name, timeTaken.TotalMilliseconds);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Display("There was an error executing Action '{0}'. Message: {1}", action.Method.Name, ex.Message);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Executes the specified action (for void methods).
-        /// </summary>
-        /// <param name="action">The action.</param>
-        private void Execute(Action action)
-        {
             DateTime before = DateTime.Now;
             //Log.DebugFormat("Executing action '{0}'", action.Method.Name);
 
@@ -131,19 +110,30 @@ namespace RabbitMQ.NETClient.Customer
                 TimeSpan timeTaken = DateTime.Now - before;
                 //if (Log.IsDebugEnabled)
                 //    Log.DebugFormat("Action '{0}' executed. Took {1} ms.", action.Method.Name, timeTaken.TotalMilliseconds);
+                return true;
             }
             catch (Exception ex)
             {
+                //TODO 记录错误日志
                 Display("There was an error executing Action '{0}'. Message: {1}", action.Method.Name, ex.Message);
-                throw;
+                //参考：.Net下RabbitMQ的使用(3) -- 竞争的消费者
+                //http://www.cnblogs.com/haoxinyue/archive/2012/09/26/2703964.html
+                //生产环境中
+                //注意：不管业务处理逻辑是否正确
+                //TODO 这个地方必须返回为true,如果不返回为True的话，当前的客户端无法再获取下一条消息,造成消息处理的阻塞
+                return true;
             }
         }
-
+        /// <summary>
+        /// 开发环境下做显示输出
+        /// 生产环境这里是用来记录错误日志。
+        /// </summary>
+        /// <param name="format"></param>
+        /// <param name="arg"></param>
         void Display(string format, params object[] arg)
         {
             Console.WriteLine(format, arg);
         }
-
-        #endregion
+        #endregion       
     }
 }

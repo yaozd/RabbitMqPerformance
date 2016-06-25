@@ -12,6 +12,10 @@ namespace RabbitMQ.NETClient.Server
     {
         static void Main(string[] args)
         {
+            //测试方法
+            DoWork();
+            Console.Read();
+            return;
             const int ThreadCount = 10;
             QueueName queueName = QueueName.HelloWorld;
             //Example(ThreadCount);
@@ -33,9 +37,26 @@ namespace RabbitMQ.NETClient.Server
                 customer.StartListening();
                 customer.ReceiveMessageCallback = message =>
                 {
-                    //TODO 业务处程序
+
+                    //TODO 业务处理逻辑
+                    try
+                    {
+                        //TODO 业务出现异常情况下的业务逻辑
+                    }
+                    catch (Exception)
+                    {
+                        //消息队列--这里是要吃掉异常的
+                        //TODO 业务出现异常情况下的业务逻辑
+                        //throw;
+                    }
                     Console.WriteLine("接收到消息：" + message);
-                    return true;
+                    //参考：.Net下RabbitMQ的使用(3) -- 竞争的消费者
+                    //http://www.cnblogs.com/haoxinyue/archive/2012/09/26/2703964.html
+                    //生产环境中
+                    //注意：不管业务处理逻辑是否正确
+                    //TODO 这个地方必须返回为true,如果不返回为True的话，当前的客户端无法再获取下一条消息
+                    //return true
+                    //return true;
                 };
             });
         }
@@ -50,12 +71,24 @@ namespace RabbitMQ.NETClient.Server
         }
         private static void DoWork()
         {
-            ICustomerMessage customer = new CustomerMessage(QueueName.LoveYou);
+            ICustomerMessage customer = new CustomerMessage(QueueName.HelloWorld);
             customer.StartListening();
             customer.ReceiveMessageCallback = message =>
             {
+                //TODO 业务处理逻辑
+                try
+                {
+                    //TODO 业务出现异常情况下的业务逻辑
+                }
+                catch (Exception)
+                {
+                    //消息队列--这里是要吃掉异常的
+                    //TODO 业务出现异常情况下的业务逻辑
+                    //throw;
+                }
+                //return false;
                 //Console.WriteLine("接收到消息：" + message);
-                return true;
+                //return true;
             };
         }
     }
