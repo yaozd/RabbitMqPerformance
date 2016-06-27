@@ -33,10 +33,36 @@ namespace RabbitMQ.NETClient.Product
             _sendConnection = factory.CreateConnection();
             _sendChannel = _sendConnection.CreateModel();
         }
-
-        public void SendMessage(QueueName queueName, string message)
+        /// <summary>
+        /// 消息持久化，防止丢失
+        /// </summary>
+        /// <param name="queueName"></param>
+        /// <param name="message"></param>
+        public void SendMessagePersistent(QueueName queueName, string message)
         {
-            Execute(() => ProductMessage.SendMessage(_sendChannel, queueName, message));
+            SendMessage(queueName,message,true);
+        }
+        /// <summary>
+        /// 消息非持久化，RabbitMq宕机后数据则会丢失
+        /// </summary>
+        /// <param name="queueName"></param>
+        /// <param name="message"></param>
+        public void SendMessageNoPersistent(QueueName queueName, string message)
+        {
+            SendMessage(queueName, message, false);
+        }
+        /// <summary>
+        /// 发送消息
+        /// 使用消息确认机制和BasicQos 就可以建立工作队列，用持久化选项可以保证即使RabbitMQ重启也不会丢失任务。
+        /// </summary>
+        /// <param name="queueName"></param>
+        /// <param name="message"></param>
+        /// <param name="isDurable">默认为true-消息持久化，防止丢失</param>
+        public void SendMessage(QueueName queueName, string message,bool isDurable=true)
+        {
+            //消息持久化，防止丢失
+            //var isDurable = true;
+            Execute(() => ProductMessage.SendMessage(_sendChannel, queueName, message, isDurable));
         }
 
         #region Execute

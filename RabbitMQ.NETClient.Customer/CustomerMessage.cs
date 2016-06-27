@@ -7,13 +7,27 @@ using RabbitMQ.NETClient.Queues;
 
 namespace RabbitMQ.NETClient.Customer
 {
+    /// <summary>
+    /// 消息处理
+    /// 参考：
+    /// RabbitMQ指南(C#)(二)工作队列
+    /// http://www.cnblogs.com/lpush/p/5537289.html
+    /// </summary>
     public class CustomerMessage : ICustomerMessage
     {
         private readonly string _listentChannelGuid;
         private readonly QueueName _queueName;
-        public CustomerMessage(QueueName queueName)
+        //消息持久化
+        private readonly bool _isDurable;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="queueName"></param>
+        /// <param name="isDurable">默认为true-消息持久化，防止丢失</param>
+        public CustomerMessage(QueueName queueName,bool isDurable=true)
         {
             _queueName = queueName;
+            _isDurable = isDurable;
             _listentChannelGuid = Guid.NewGuid().ToString();
         }
 
@@ -41,8 +55,8 @@ namespace RabbitMQ.NETClient.Customer
         {
             var queue = QueueNameHelper.Instance.Name(_queueName);
             var listenChannel = GetChannel();
-            CustomerQueueDeclare.Instance.Check(listenChannel, _queueName);
-            //公平分发,不要同一时间给一个工作者发送多于一个消息
+            CustomerQueueDeclare.Instance.Check(listenChannel, _queueName, _isDurable);
+            //平衡调度-公平分发,不要同一时间给一个工作者发送多于一个消息
             listenChannel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false); ;
             //创建事件驱动的消费者类型，不要用下边的死循环来消费消息
             var consumer = new EventingBasicConsumer(listenChannel);

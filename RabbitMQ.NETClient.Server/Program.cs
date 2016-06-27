@@ -8,6 +8,13 @@ using RabbitMQ.NETClient.Queues;
 
 namespace RabbitMQ.NETClient.Server
 {
+    /// <summary>
+    /// 默认情况下生成的消息队列：
+    /// 队列的持久化
+    /// 消息的持久化
+    /// RabbitMQ指南(C#)(二)工作队列
+    /// http://www.cnblogs.com/lpush/p/5537289.html
+    /// </summary>
     class Program
     {
         static void Main(string[] args)

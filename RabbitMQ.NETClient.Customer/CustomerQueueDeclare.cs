@@ -30,7 +30,8 @@ namespace RabbitMQ.NETClient.Customer
         /// </summary>
         /// <param name="channel"></param>
         /// <param name="queueName"></param>
-        public void Check(IModel channel, QueueName queueName)
+        /// <param name="isDurable"></param>
+        public void Check(IModel channel, QueueName queueName,bool isDurable)
         {
             var val = _ht[queueName];
             if (val == null)
@@ -40,7 +41,7 @@ namespace RabbitMQ.NETClient.Customer
                     val = _ht[queueName];
                     if (val == null)
                     {
-                        QueueDeclare(channel, queueName);
+                        QueueDeclare(channel, queueName, isDurable);
                         _ht[queueName] = true;
                     }
                 }
@@ -52,9 +53,21 @@ namespace RabbitMQ.NETClient.Customer
         /// </summary>
         /// <param name="channel"></param>
         /// <param name="queueName"></param>
-        public void QueueDeclare(IModel channel, QueueName queueName)
+        /// <param name="isDurable"></param>
+        public void QueueDeclare(IModel channel, QueueName queueName,bool isDurable)
         {
             var queue = QueueNameHelper.Instance.Name(queueName);
+            //消息持久化，防止丢失
+            if (isDurable)
+            {
+                channel.QueueDeclare(queue: queue,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
+                return;
+            }
+            //消息非持久化
             channel.QueueDeclare(queue: queue,
                 durable: false,
                 exclusive: false,

@@ -7,6 +7,11 @@ namespace RabbitMqPerformance
 {
     /// <summary>
     /// Product--测试生产者客户端
+    /// 参考：
+    /// RabbitMQ指南(C#)(二)工作队列
+    /// http://www.cnblogs.com/lpush/p/5537289.html
+    /// RabbitMQ的几种典型使用场景
+    /// http://www.cnblogs.com/luxiaoxun/p/3918054.html
     /// </summary>
     internal class Program
     {
@@ -53,13 +58,13 @@ namespace RabbitMqPerformance
             {
                 //
                 Singleton.Instance.MqProduct().SendMessage(QueueName.HelloWorld, TestData2 + "HelloWorld");
-                Singleton.Instance.MqProduct().SendMessage(QueueName.LoveYou, TestData2 + "LoveYou");
+                //Singleton.Instance.MqProduct().SendMessage(QueueName.LoveYou, TestData2 + "LoveYou");
             }
             else
             {
                 //
                 Singleton.Instance.MqProduct().SendMessage(QueueName.LoveYou, TestData2 + "LoveYou");
-                Singleton.Instance.MqProduct().SendMessage(QueueName.HelloWorld, TestData2 + "HelloWorld");
+                //Singleton.Instance.MqProduct().SendMessage(QueueName.HelloWorld, TestData2 + "HelloWorld");
             }
         }
 
